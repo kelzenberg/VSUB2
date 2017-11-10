@@ -20,7 +20,7 @@ public class Networking {
         List<InterfaceAddress> intfAdresses = netintf.getInterfaceAddresses();
         for (InterfaceAddress intfAdress : intfAdresses) {
             out.printf("| InetAddress: %s\n", intfAdress.getAddress());
-            out.printf("| | Binary: %s\n", Long.toBinaryString(getBinary(intfAdress)));
+            out.printf("| | Binary: %s\n", getBinaryAddress(intfAdress));
             out.printf("| IP-Version: %s\n", getIPVersion(intfAdress));
             out.printf("| Prefix: %s\n", intfAdress.getNetworkPrefixLength());
             out.printf("\n");
@@ -44,5 +44,14 @@ public class Networking {
             out = (out << 8) + x;
         }
         return out;
+    }
+    
+    private static String getBinaryAddress(InterfaceAddress intfAdress) {
+        String version = getIPVersion(intfAdress);
+        if(version == "IPv4"){
+            return String.format("%1$" + 32 + "s", Long.toBinaryString(getBinary(intfAdress))).replace(" ", "0");
+        } else {
+            return String.format("%1$" + 48 + "s", Long.toBinaryString(getBinary(intfAdress))).replace(" ", "0");
+        }
     }
 }
