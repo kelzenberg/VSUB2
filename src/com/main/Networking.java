@@ -23,6 +23,7 @@ public class Networking {
             out.printf("| | Binary: %s\n", getBinaryAddress(intfAdress));
             out.printf("| IP-Version: %s\n", getIPVersion(intfAdress));
             out.printf("| Prefix: %s\n", intfAdress.getNetworkPrefixLength());
+            // swap to getBinaryAdress
             out.printf("| | Network: %s\n", Long.toBinaryString(getBinary(intfAdress)).substring(0,intfAdress.getNetworkPrefixLength()/8));
             out.printf("| | Client: %s\n", Long.toBinaryString(getBinary(intfAdress)).substring(intfAdress.getNetworkPrefixLength()/8+1,//TODO BIS STRING LENGTH);
             out.printf("\n");
