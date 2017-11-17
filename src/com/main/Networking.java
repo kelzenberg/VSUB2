@@ -1,11 +1,9 @@
 package com.main;
 
-import java.io.*;
 import java.net.*;
 import java.util.*;
 
 import static java.lang.System.out;
-import com.main.Broadcaster;
 
 public class Networking {
 
@@ -13,7 +11,7 @@ public class Networking {
 
     public static void main(String args[]) throws SocketException {
         Enumeration<NetworkInterface> netIntf = NetworkInterface.getNetworkInterfaces();
-        ArrayList<InetAddress> broadcastAddresses = new ArrayList<>();
+        broadcastAddresses = new ArrayList<>();
         for (NetworkInterface x : Collections.list(netIntf))
             displayInterfaceInformation(x);
             
