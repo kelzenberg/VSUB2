@@ -3,6 +3,7 @@ package com.main;
 import java.net.*;
 import java.util.*;
 
+import com.fibonacci.FibonacciServer;
 import static java.lang.System.out;
 
 public class Networking {
@@ -10,6 +11,10 @@ public class Networking {
     static ArrayList<InetAddress> broadcastAddresses;
 
     public static void main(String args[]) throws SocketException {
+        
+        FibonacciServer T1 = new FibonacciServer(new String[]{"-a", "0.0.0.0.", "-p", "65535"});
+        T1.start();
+        
         Enumeration<NetworkInterface> netIntf = NetworkInterface.getNetworkInterfaces();
         broadcastAddresses = new ArrayList<>();
         for (NetworkInterface x : Collections.list(netIntf))
@@ -17,6 +22,8 @@ public class Networking {
             
         Timer timer = new Timer();
         timer.schedule(new Broadcaster(broadcastAddresses), 0, 5000);
+        
+        
     }
 
     private static void displayInterfaceInformation(NetworkInterface netintf) throws SocketException {
