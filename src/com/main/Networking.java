@@ -5,13 +5,20 @@ import java.net.*;
 import java.util.*;
 
 import static java.lang.System.out;
+import com.main.Broadcaster;
 
 public class Networking {
 
+    static ArrayList<InetAddress> broadcastAddresses;
+
     public static void main(String args[]) throws SocketException {
         Enumeration<NetworkInterface> netIntf = NetworkInterface.getNetworkInterfaces();
+        ArrayList<InetAddress> broadcastAddresses = new ArrayList<>();
         for (NetworkInterface x : Collections.list(netIntf))
             displayInterfaceInformation(x);
+            
+        Timer timer = new Timer();
+        timer.schedule(new Broadcaster(broadcastAddresses), 0, 5000);
     }
 
     private static void displayInterfaceInformation(NetworkInterface netintf) throws SocketException {
@@ -22,10 +29,14 @@ public class Networking {
             out.printf("| InetAddress: %s\n", intfAdress.getAddress());
             out.printf("| | Binary: %s\n", getBinaryAddress(intfAdress));
             out.printf("| IP-Version: %s\n", getIPVersion(intfAdress));
+            if (intfAdress.getBroadcast() != null) {
+                out.printf("| Broadcast: %s\n", intfAdress.getBroadcast() );
+                broadcastAddresses.add(intfAdress.getBroadcast());
+            }
             out.printf("| Prefix: %s\n", intfAdress.getNetworkPrefixLength());
             // swap to getBinaryAdress
-            out.printf("| | Network: %s\n", Long.toBinaryString(getBinary(intfAdress)).substring(0,intfAdress.getNetworkPrefixLength()/8));
-            out.printf("| | Client: %s\n", Long.toBinaryString(getBinary(intfAdress)).substring(intfAdress.getNetworkPrefixLength()/8+1,//TODO BIS STRING LENGTH);
+            out.printf("| | Network: %s\n", getBinaryAddress(intfAdress).substring(0,intfAdress.getNetworkPrefixLength()));
+            out.printf("| | Client: %s\n", getBinaryAddress(intfAdress).substring(intfAdress.getNetworkPrefixLength()));
             out.printf("\n");
         }
         out.printf("\n");
@@ -54,7 +65,7 @@ public class Networking {
         if(version == "IPv4"){
             return String.format("%1$" + 32 + "s", Long.toBinaryString(getBinary(intfAdress))).replace(" ", "0");
         } else {
-            return String.format("%1$" + 48 + "s", Long.toBinaryString(getBinary(intfAdress))).replace(" ", "0");
+            return String.format("%1$" + 128 + "s", Long.toBinaryString(getBinary(intfAdress))).replace(" ", "0");
         }
     }
 }
