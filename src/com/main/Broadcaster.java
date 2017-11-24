@@ -23,14 +23,14 @@ public class Broadcaster extends TimerTask {
     }
     
     public void run() {
-        System.out.println("Broadcast running.");
+        System.out.println("[BROADCASTER]: Broadcast running.");
         for (InetAddress curInstance: broadcastAddresses) {
-            System.out.println(curInstance);
+            System.out.println("[BROADCASTER]: " + curInstance);
             DatagramPacket packet = new DatagramPacket(message, message.length, curInstance, port);
             try {
                 socket.send(packet);
             } catch(Exception e) {
-                System.out.println("An error occoured while sending Broadcast.");
+                System.out.println("[BROADCASTER]: An error occoured while sending Broadcast.");
                 System.out.println(e);
             }
         }

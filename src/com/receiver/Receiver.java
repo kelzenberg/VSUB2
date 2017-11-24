@@ -10,11 +10,12 @@ public class Receiver {
 
 
     public static void main(String args[]) throws Exception {
+        // Create a buffer that will hold the message
         byte[] dataBuffer = new byte[1000];
         DatagramSocket socket = new DatagramSocket(9876);
         DatagramPacket packet = new DatagramPacket(dataBuffer, dataBuffer.length);
         
-        while( true) {
+        while( true ) {
             socket.receive(packet);
             if (packet.getData().length == 0)continue;
             System.out.print("Received message from ");
@@ -42,58 +43,44 @@ public class Receiver {
         try {
             // tries to open a socket to the server at address:port
             clientSocket = new Socket(address, port);
-        } catch (Exception e) {
-            // Connection failed
-            System.out.println("Server not reachable.");
-            return;
-        }
-        System.out.println("Connection established.");
-
-        try {
             //Stream to send data through the socket to the server
             serverWriter = new DataOutputStream(clientSocket.getOutputStream());
             //Stream for receiving data through the socket from the server
             serverReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        } catch(Exception e) {
-            System.out.println("Network error");
+            // tries to send the entered value to the server
+            serverWriter.writeBytes("get;17\n");
+        } catch (Exception e) {
+            // Connection failed
+            System.out.println("Network error.");
             System.out.println(e);
             return;
         }
-
-        try {
-            // tries to send the entered value to the server
-            serverWriter.writeBytes("get;17\n");
-        } catch (IOException e) {
-            //An error occoured while writing the value to the server or while reading the response
-            System.out.println("Connection closed.");
-            result = ""; // this needs to be set otherwise it doesn't compile
-        }
+        System.out.println("Connection established.");
         
+        // Repeat until the communication with the server has ended.
         while (true) {
             try {
                 // saves the result
                 result = serverReader.readLine();
+                if (result == null){
+                    throw new IOException("");
+                }
+                // Sends an acknowledgment of receipt back to the server
+                serverWriter.writeBytes("ok;\n");
             } catch(IOException e) {
                 result = "Connection closed.";
                 break;
             }
-            
-            try {
-                // tries to send the entered value to the server
-                serverWriter.writeBytes("ok;\n");
-            } catch (IOException e) {
-                //An error occoured while writing the value to the server or while reading the response
-                result = "Connection closed.";
-            }
-            
+                        
             //parses the response of the server
             result = parseResponse(result);
             
-            // The server caluclates the number
-            if (result != "") {
-                break;
-            }  else {
+            if (result == "") {
+                // The server caluclates the number
                 System.out.println("Server is calculating...");
+            }  else {
+                // The server has send a response. This can either be the calculated number or an error message.
+                break;
             }
         }
         
@@ -108,10 +95,6 @@ public class Receiver {
     }
     
     private static String parseResponse(String response) {
-        if (response == null) {
-            //The socket read null. The socket broke
-            System.out.println("Connection closed.");
-        }
         String[] data;
         //Splits the response intro responseCode and payload
         data = response.split(";");

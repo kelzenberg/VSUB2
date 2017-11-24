@@ -31,73 +31,85 @@ public class FibonacciServer extends Thread {
     }
     
     public void run() {
+        String received; // string to save last received message
+        ServerSocket socket; // main communication socket
+        Socket connectionSocket;
+        BufferedReader inFromClient;
+        DataOutputStream outToClient;
+        // tries to bind to the given address and port
         try {
-            String received; // string to save last received message
-            ServerSocket socket; // main communication socket
-            // tries to bind to the given address and port
+            socket = new ServerSocket(port, 0, address);
+        } catch (IOException e) {
+            System.out.println("[FIBONACCI]: Unable to bind to " + address.getHostAddress() + ":" + port + ".");
+            System.out.println(e.getMessage());
+            System.exit(1);
+            return; // needed for exiting program if socket threw exception
+        }
+        
+            System.out.println("[FIBONACCI]: Server is listening on " + address.getHostAddress() + ":" + port + ".");
+        try {
+            System.out.println("[FIBONACCI]: Host address: " + InetAddress.getLocalHost());
+        } catch(UnknownHostException e) {
+            System.out.println("[FIBONACCI]: Host address: [unknown]");
+        }
+        
+        // this loop waits for (more) clients to connect when Server has no client (any longer)
+        while (true) {
+            
             try {
-                socket = new ServerSocket(port, 0, address);
-            } catch (IOException e) {
-                System.out.println("Unable to bind to " + address.getHostAddress() + ":" + port + ".");
-                System.out.println(e.getMessage());
-                System.exit(1);
-                return; // needed for exiting program if socket threw exception
+                connectionSocket = socket.accept(); // wait for client connection
+                inFromClient =
+                new BufferedReader(new InputStreamReader(connectionSocket.getInputStream())); // create a stream reader for socket
+                outToClient = new DataOutputStream(connectionSocket.getOutputStream()); // create a stream writer for socket
+            } catch(IOException e) {
+                continue;
             }
             
+            System.out.println("[FIBONACCI]: Client connected.");
             
-            System.out.println("Server is listening on " + address.getHostAddress() + ":" + port + ".");
-            System.out.println("Host address: " + InetAddress.getLocalHost());
-            
-            // this loop waits for (more) clients to connect when Server has no client (any longer)
+            // runs as long as a client is connected to the Server
             while (true) {
-                
-                Socket connectionSocket = socket.accept(); // wait for client connection
-                BufferedReader inFromClient =
-                new BufferedReader(new InputStreamReader(connectionSocket.getInputStream())); // create a stream reader for socket
-                DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream()); // create a stream writer for socket
-                
-                System.out.println("Client connected.");
-                
-                // runs as long as client is connected to the Server
-                while (true) {
-                    
-                    // reads input from client and displays it
+                try {
+                    // reads input from client
                     received = inFromClient.readLine();
-                    System.out.println("Received: " + received);
-                    
-                    
-                    if (received == null){
-                        System.out.println("Connection lost. Socket will be closed.");
+                } catch(IOException e) {
+                    continue;
+                }
+                
+                if (received == null){
+                    System.out.println("[FIBONACCI]: Connection lost. Socket will be closed.");
+                    break;
+                }
+                //System.out.println("[FIBONACCI]: Received: " + received);
+
+                String response = ""; // empty string to build response in
+                
+                response = parseRequest(outToClient, received);
+                
+                if (response == "_CONNECTION_CLOSED_") {
+                    // The request parser came to the conclusion that the connection is closed.
+                    break;
+                } else if (response == ""){ // No message needs to be sent.
+
+                } else {                    
+                    try {
+                        // displays the appropriate response to the result (without parsing needed)
+                        outToClient.writeBytes(response + "\n"); // writes bytes because the client needs the new line character for its readline method.
+                    } catch (IOException e) {
+                        System.out.println("[FIBONACCI]: Client disconnected!");
                         break;
-                    }
-                    String response = ""; // empty string to build response in
-                    
-                    response = parseRequest(outToClient, received);
-                    
-                    if (response != "") {
-                        
-                        try {
-                            
-                            // displays the appropriate response to the result (without parsing needed)
-                            outToClient.writeBytes(response + "\n"); // writes bytes because the client needs the new line character for its readline method.
-                            
-                        } catch (IOException e) {
-                            System.out.println("Client disconnected!");
-                            break;
-                        }
                     }
                 }
             }
-        } catch(Exception e){
-            System.out.println(e);
         }
     }
     
+    // Parses the request of the client and returns a string that will be sent back
     private static String parseRequest(DataOutputStream toClient,String request) {
         String response;
         if (request == null) {
             //The socket read null. The socket broke
-            System.out.println("Invalid Request");
+            System.out.println("[FIBONACCI]: Invalid Request");
             // TODO: Handle error. Send to client
         }
         String[] data;
@@ -108,35 +120,41 @@ public class FibonacciServer extends Thread {
             case "get":
                 try {
                     int input = Integer.parseInt(data[1], 10);
-                    
-                    if (input < 0) {
-                        response = "402;too low";
-                    } else if (input > 91) {
-                        response = "501;too large";
-                    } else {
-                        try {
-                            toClient.writeBytes("100;Continue\n");
-                        } catch (IOException e) {
-                            System.out.println("Client disconnected!");
-                            response = "";
-                            return "";
-                        }
-                        
-                        long result = FibonacciCalc.calculate(input);
-                        // outputs calculated result & verifies output
-                        System.out.println("Calculated: " + result);
-                        response = "200;" + String.valueOf(result);
-                    }
+                    response = parseGetRequest(toClient, input);
                 } catch (NumberFormatException e) {
                     response = "401;NaN";
                 }
             break;
             case "ok":
-                System.out.println("Message was received by client.");
+                System.out.println("[FIBONACCI]: Message was received by client.");
                 response = "";
             break;
             default:
                 return "The client Request was invalid.";
+        }
+        return response;
+    }
+    
+    private static String parseGetRequest(DataOutputStream toClient,int input) {
+        String response;
+        if (input < 0) {
+            response = "402;too low";
+        } else if (input > 91) {
+            response = "501;too large";
+        } else {
+            System.out.println("[FIBONACCI]: Calculating number " + input);
+            try {
+                toClient.writeBytes("100;Continue\n");
+            } catch (IOException e) {
+                System.out.println("[FIBONACCI]: Client disconnected!");
+                response = "_CONNECTION_CLOSED_";
+                return response;
+            }
+            
+            long result = FibonacciCalc.calculate(input);
+            // outputs calculated result & verifies output
+            System.out.println("[FIBONACCI]: Calculated: " + result);
+            response = "200;" + String.valueOf(result);
         }
         return response;
     }
@@ -150,7 +168,7 @@ public class FibonacciServer extends Thread {
                 i++;
                 // check if a next argument exists
                 if (i == argv.length) {
-                    System.out.println("No port provided.");
+                    System.out.println("[FIBONACCI]: No port provided.");
                 } else {
                     // try to parse the argument as a number
                     try {
@@ -159,10 +177,10 @@ public class FibonacciServer extends Thread {
                         if (number >= 0 && number <= 65535) {
                             port = number;
                         } else {
-                            System.out.println("Invalid port number. (" + number + ")");
+                            System.out.println("[FIBONACCI]: Invalid port number. (" + number + ")");
                         }
                     } catch (NumberFormatException e) {
-                        System.out.println("Invalid port number.");
+                        System.out.println("[FIBONACCI]: Invalid port number.");
                     }
                 }
                 break;
@@ -171,12 +189,12 @@ public class FibonacciServer extends Thread {
                 i++;
                 // check if a next argument exists
                 if (i == argv.length) {
-                    System.out.println("No address provided.");
+                    System.out.println("[FIBONACCI]: No address provided.");
                 } else {
                     try {
                         address = InetAddress.getByName(argv[i]);
                     } catch (UnknownHostException e) {
-                        System.out.println("Invalid address. (" + argv[i] + ")");
+                        System.out.println("[FIBONACCI]: Invalid address. (" + argv[i] + ")");
                     }
                 }
                 break;
