@@ -7,8 +7,8 @@ public class Receiver {
 
 
     public static void main(String args[]) throws Exception {
-        byte[] dataBuffer = new byte[0];
-        DatagramSocket socket = new DatagramSocket(9876, InetAddress.getByName("0.0.0.0"));
+        byte[] dataBuffer = new byte[1000];
+        DatagramSocket socket = new DatagramSocket(9876);
         DatagramPacket packet = new DatagramPacket(dataBuffer, dataBuffer.length);
         
         while( true) {
