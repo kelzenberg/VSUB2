@@ -17,7 +17,7 @@ public class Broadcaster extends TimerTask {
             
         }  
         port = 9876;
-        message = ("Dieser Server wurde von Jannis Rieger, Steffen Ansorge und Nicolai Brandt implementiert und stellt die Fibonacci-Funktion als Dienst bereit. Um den Dienst zu nutzen, senden Sie eine Nachricht an Port 65535 auf diesem Server. Das Format der Nachricht sollte folgendermaßen aussehen: ASCII encoded String: 'get|[nummer]' Um die Fibonaccizahl der Zahl 5 zu erhalten muss z.B. 'get|5' übermittelt werden.").getBytes();
+        message = ("Dieser Server wurde von Jannis Rieger, Steffen Ansorge und Nicolai Brandt implementiert und stellt die Fibonacci-Funktion als Dienst bereit. Um den Dienst zu nutzen, senden Sie eine Nachricht an Port 65535 auf diesem Server. Das Format der Nachricht sollte folgendermaßen aussehen: ASCII encoded String: 'get;[nummer]' Um die Fibonaccizahl der Zahl 5 zu erhalten muss z.B. 'get;5' übermittelt werden.").getBytes();
         
         broadcastAddresses = list;
     }

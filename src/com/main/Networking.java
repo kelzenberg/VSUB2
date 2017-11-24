@@ -12,7 +12,7 @@ public class Networking {
 
     public static void main(String args[]) throws SocketException {
         
-        FibonacciServer T1 = new FibonacciServer(new String[]{"-a", "0.0.0.0.", "-p", "65535"});
+        FibonacciServer T1 = new FibonacciServer(new String[]{"-a", "0.0.0.0", "-p", "65535"});
         T1.start();
         
         Enumeration<NetworkInterface> netIntf = NetworkInterface.getNetworkInterfaces();
