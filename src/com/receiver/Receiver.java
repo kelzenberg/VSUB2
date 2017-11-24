@@ -14,11 +14,10 @@ public class Receiver {
         while( true) {
             socket.receive(packet);
             if (packet.getData().length == 0)continue;
+            System.out.print("Received message from ");
             System.out.println(packet.getAddress());
             String data = new String(packet.getData(),"UTF-8");
             System.out.println(data);
-            System.out.println(packet.getData().length);
-            System.out.println(packet.getPort());
         }
     }
 }
