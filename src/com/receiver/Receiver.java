@@ -1,45 +1,60 @@
 package com.receiver;
+/**
+ *
+ * Listens to broadcasts and connects to server using its broadcast message.
+ * Then requests the calculation of a specific fibonacci number and returns the result.
+ *
+ */
 
 import java.net.*;
-import java.util.*;
 import java.util.regex.*;
 import java.io.*;
 import java.lang.String;
 
 public class Receiver {
 
-
     public static void main(String args[]) throws Exception {
         // Create a buffer that will hold the message
         byte[] dataBuffer = new byte[1000];
+        // Create a new socket and packet
         DatagramSocket socket = new DatagramSocket(9876);
         DatagramPacket packet = new DatagramPacket(dataBuffer, dataBuffer.length);
-        
+
         while( true ) {
+            // block execution until a packet is received
             socket.receive(packet);
             if (packet.getData().length == 0)continue;
             System.out.print("Received message from ");
             System.out.println(packet.getAddress());
+            // get data from packet as string
             String data = new String(packet.getData(),"UTF-8");
             System.out.println(data);
-            
+
+            // parse the broadcast message and find port number to connect to
             Pattern p = Pattern.compile("Port (\\d+?) auf");
             Matcher m = p.matcher(data);
             if(m.find()) {
                 System.out.println("Port found: " + m.group(1));
                 int port = Integer.parseInt(m.group(1));
+                // send a new fibonacci request to server
                 sendFibonacciRequest(packet.getAddress(),port);
             } else {
                 System.out.println("No valid port found!");
             }
         }
     }
-    
+
+    /**
+     * Send a request to the server requesting to calculate a specific fibonacci number
+     * @param address the server address to connect to
+     * @param port the port to use in communication with the server
+     */
     public static void sendFibonacciRequest(InetAddress address,int port) {
-        String result; //answer from the server
-        Socket clientSocket; //The socket
+        String result; // answer from the server
+        Socket clientSocket; // new socket to connect with server
         DataOutputStream serverWriter;
         BufferedReader serverReader;
+
         try {
             // tries to open a socket to the server at address:port
             clientSocket = new Socket(address, port);
@@ -84,7 +99,7 @@ public class Receiver {
             }
         }
         
-        //Prints the result
+        // Prints the result
         System.out.println(result);
         try {
             clientSocket.close();
@@ -93,10 +108,15 @@ public class Receiver {
             System.out.println("Socket couldn't be closed.");
         }
     }
-    
+
+    /**
+     * Parse the servers response and return readable messages.
+     * @param response is the response the server gave upon fibonacci request.
+     * @return the answer the server gave via status code.
+     */
     private static String parseResponse(String response) {
         String[] data;
-        //Splits the response intro responseCode and payload
+        // Splits the response intro responseCode and payload
         data = response.split(";");
         switch (data[0]) {
             // 100 Continue
