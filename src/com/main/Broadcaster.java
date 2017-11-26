@@ -10,6 +10,12 @@ public class Broadcaster extends TimerTask {
     private int port;
     DatagramSocket socket;
 
+    /**
+     * Constructor to create a new Broadcaster
+     * Sets the socket, port, message and the list of broadcast addresses
+     *
+     * @param list
+     */
     public Broadcaster(ArrayList<InetAddress> list) {
         // create a new Socket
         try {
@@ -24,6 +30,9 @@ public class Broadcaster extends TimerTask {
         broadcastAddresses = list;
     }
 
+    /**
+     * Runs the broadcaster (on a timer) and sends out the Packets (on timer tick)
+     */
     public void run() {
         System.out.println("[BROADCASTER]: Broadcast running.");
         // for every Broadcast-Address in reach...
